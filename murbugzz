@@ -1,7 +1,7 @@
-pkg update && pkg upgrade-y
-pkg install python-y
+pkg update && pkg upgrade -y
+pkg install python -y
 pip install pyTelegramBotAPI
 termux-setup-storage
-pkg install play-audio-y
-pkg install wget-y
+pkg install play-audio -y
+pkg install wget -y
 wget https://raw.githubusercontent.com/Rayy00418/Murbug./refs/heads/main/murbug.py
